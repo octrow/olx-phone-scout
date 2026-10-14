@@ -85,7 +85,6 @@ async def run_scraper(args):
 
             # Merge with existing
             all_listings = scraper.merge_with_existing(use_session_dir=True)
-            logger.info(f"📊 Total after merge: {len(all_listings)} listings")
 
             # Save and categorize
             iphones, androids, unknown = scraper.save_results(all_listings, use_session_dir=True)
