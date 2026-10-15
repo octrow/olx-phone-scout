@@ -384,6 +384,35 @@ class TestAsyncScraperSaveOperations:
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
+    def test_merge_with_existing_logs_total_after_merge_once(self):
+        """merge_with_existing logs 'Total after merge' once"""
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from loguru import logger
+
+        scraper = AsyncOLXScraper()
+        scraper.listings = [{"link": "/new", "title": "New Phone"}]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            existing_data = {"listings": [{"link": "/old", "title": "Old Phone"}]}
+            json.dump(existing_data, f)
+            temp_file = f.name
+
+        captured_messages = []
+        handler_id = logger.add(lambda msg: captured_messages.append(str(msg)))
+
+        try:
+            result = scraper.merge_with_existing(temp_file, use_session_dir=False)
+
+            assert len(result) == 2
+            merge_logs = [msg for msg in captured_messages if "Total after merge" in msg]
+            assert len(merge_logs) == 1
+        finally:
+            logger.remove(handler_id)
+            Path(temp_file).unlink(missing_ok=True)
+
     def test_get_output_files_session_dir(self):
         """_get_output_files returns session directory paths"""
         from pathlib import Path
