@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `--notify`: after the analysis, listings that entered the top 10 since the last notification are
+  sent to a Telegram chat (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). Sent links are remembered per
+  session; a failed send never fails the run. README explains scheduling with a systemd timer or cron.
+- Dependency: `tg-toolkit` (Bot API push; pulls in `telethon`).
+
 ## [1.0.4] - 2026-10-15
 
 ### Added

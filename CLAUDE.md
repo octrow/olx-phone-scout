@@ -151,6 +151,7 @@ run.sh
 │   │
 │   └── infrastructure/             # Infrastructure
 │       ├── logging.py             # Loguru-based logging
+│       ├── alerts.py              # --notify: Telegram alerts for new top listings
 │       ├── cache.py               # Disk caching
 │       └── setup_env.py           # Environment setup
 │
@@ -342,6 +343,10 @@ python main.py                  # Direct Python execution
 # Android + iPhone (session: alma-ata_15k-80k_both)
 ./run.sh --min-price 15000 --max-price 80000 --phone-type both
 
+# Daily run: Telegram alert for listings new to the top 10 (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+# Sent links per session: data/sessions/{session}/alerts_sent.json (src/infrastructure/alerts.py)
+./run.sh --notify
+
 # Wider search: Almaty city + region, shops too (session suffix _shops)
 # Out-of-town (📍) and shop (🏪) listings get warnings, not score changes
 ./run.sh --location alm --include-business
@@ -420,4 +425,4 @@ jq '.phones[].title' data/sessions/*/results/unknown.json
 ## Future Roadmap
 
 - [ ] Real-time market prices instead of the hand-maintained table
-- [ ] Automated daily runs with alerts
+- [x] Automated daily runs with alerts (`--notify` + a systemd timer or cron, see README)

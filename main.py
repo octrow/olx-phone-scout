@@ -30,6 +30,7 @@ from src.core import config
 from src.core.async_scraper import AsyncOLXScraper
 from src.detection.recategorize import detect_phone_brand_improved
 from src.infrastructure import logging as logging_cfg
+from src.infrastructure.alerts import notify_new_top
 from src.infrastructure.logging import logger
 from src.infrastructure.setup_env import setup_env
 
@@ -212,6 +213,7 @@ async def run_analyzer(  # noqa: PLR0913
     use_openrouter=False,
     max_details=100,
     max_ai_analysis=30,
+    notify=False,
 ):
     """
     Step 3: Analysis pipeline using AndroidAnalyzer
@@ -270,11 +272,21 @@ async def run_analyzer(  # noqa: PLR0913
                 logger.warning(f"      ⚠️  {warning}")
 
         logger.info("")
+        if notify:
+            send_alerts(top_phones)
         return True
 
     except Exception as e:
         logger.error(f"❌ Analysis failed: {e}", exc_info=True)
         return False
+
+
+def send_alerts(top_phones):
+    """--notify: a failed alert is logged and never fails the analysis step."""
+    try:
+        notify_new_top(top_phones, config.get_session_dir(), config.get_session_name())
+    except Exception as e:
+        logger.warning(f"⚠️  Telegram alert failed: {e}")
 
 
 # =============================================================================
@@ -334,6 +346,7 @@ async def run_pipeline(args):
                 use_cerebras=getattr(args, "cerebras", False),
                 use_openrouter=getattr(args, "openrouter", False),
                 max_ai_analysis=getattr(args, "gemini_top_n", 30),
+                notify=getattr(args, "notify", False),
             )
             results["analyze"] = success
 
@@ -422,6 +435,9 @@ Examples:
   # Custom price range
   python main.py --min-price 150000 --max-price 300000
 
+  # Daily run: Telegram alert for listings new to the top 10
+  python main.py --notify
+
   # Show configuration
   python main.py --show-config
         """,
@@ -480,6 +496,13 @@ Examples:
         "--cerebras", action="store_true", help="Use Cerebras (ultra-fast, 2000-3000 tokens/sec)"
     )
     parser.add_argument("--openrouter", action="store_true", help="Use OpenRouter (free models)")
+
+    # Alerts
+    parser.add_argument(
+        "--notify",
+        action="store_true",
+        help="Send listings new to the top 10 to Telegram (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)",
+    )
 
     # Configuration
     parser.add_argument("--show-config", action="store_true", help="Show configuration and exit")
