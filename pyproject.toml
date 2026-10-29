@@ -352,3 +352,7 @@ min_confidence = 80
 paths = ["src"]
 exclude = ["*/.venv/*", "*/venv/*", "*/data/*", "*/logs/*"]
 ignore_names = ["test_*", "*_test", "cls"]
+
+[project.urls]
+Homepage = "https://github.com/octrow/olx-phone-scout"
+Issues = "https://github.com/octrow/olx-phone-scout/issues"
