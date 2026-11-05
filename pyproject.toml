@@ -1,6 +1,6 @@
 [project]
 name = "olx-phone-scout"
-version = "1.0.4"
+version = "1.0.5"
 description = "Finds the best-value used phones on OLX.kz: scrapes listings, adds Kimovil specs, scores price against market value"
 readme = "README.md"
 license = "MIT"
