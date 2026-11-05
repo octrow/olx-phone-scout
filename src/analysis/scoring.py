@@ -1230,13 +1230,16 @@ def get_camera_score(model_name, tier=None):
     """
     model_lower = model_name.lower() if model_name else ""
 
+    # No model: "" would partial-match every key, so skip the table and use the tier default
+    table = CAMERA_SCORES if model_lower else {}
+
     # Check for exact match
-    if model_lower in CAMERA_SCORES:
-        camera_data = CAMERA_SCORES[model_lower]
+    if model_lower in table:
+        camera_data = table[model_lower]
         return camera_data["score"], camera_data["label"]
 
     # Check for partial match (e.g., "s24 ultra" matches "samsung s24 ultra")
-    for camera_model, camera_data in CAMERA_SCORES.items():
+    for camera_model, camera_data in table.items():
         if camera_model in model_lower or model_lower in camera_model:
             return camera_data["score"], camera_data["label"]
 
@@ -1260,6 +1263,8 @@ def get_dxomark_score(model_name):
         int: DXOMark score or None
     """
     model_lower = model_name.lower() if model_name else ""
+    if not model_lower:
+        return None
 
     if model_lower in CAMERA_SCORES:
         return CAMERA_SCORES[model_lower]["dxomark"]

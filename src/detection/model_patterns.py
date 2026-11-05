@@ -2,13 +2,15 @@
 
 from typing import Any
 
+# First hit in this order wins: sub-brands (poco, redmi) come before xiaomi,
+# so "Xiaomi Redmi Note 12 Pro" parses as Redmi, not as a Xiaomi flagship
 BRAND_ALIASES = {
     "samsung": ["samsung", "самсунг"],
+    "poco": ["poco", "поко"],
+    "redmi": ["redmi", "редми"],
     "xiaomi": ["xiaomi", "ксиоми", "сяоми"],
     "google": ["pixel", "google", "гугл"],
     "oneplus": ["oneplus", "ванплюс"],
-    "poco": ["poco", "поко"],
-    "redmi": ["redmi", "редми"],
     "realme": ["realme", "реалми"],
     "oppo": ["oppo", "оппо"],
     "vivo": ["vivo", "виво"],

@@ -560,3 +560,60 @@ class TestAnalyzerCloudLLMWorkflows:
         result = analyzer._run_gemini_fallback(androids, cloud_failures)
 
         assert result == androids
+
+
+class _FakeGemini:
+    """Gemini stand-in: marks every analysed phone, no network."""
+
+    enabled = True
+
+    def __init__(self):
+        self.calls = []
+
+    def analyze_batch(self, phones, max_phones):
+        self.calls.append(max_phones)
+        for phone in phones[:max_phones]:
+            phone["gemini_analysis"] = {"analyzed": True}
+        return phones
+
+
+class TestAnalyzerPipelineOrder:
+    """Logic-map findings #1 and #2: which provider runs, and when scores are final"""
+
+    def test_gemini_alone_runs_as_primary(self):
+        """--gemini without a cloud LLM analyses the top phones with Gemini (#1)"""
+        analyzer = AndroidAnalyzer(enrich_with_kimovil=False)
+        analyzer.gemini = _FakeGemini()
+        analyzer.cloud_llm = None
+        androids = [
+            {"title": "Phone 1", "value_score": 90},
+            {"title": "Phone 2", "value_score": 80},
+        ]
+
+        result = analyzer._run_ai_analysis_pipeline(androids, top_count=2)
+
+        assert analyzer.gemini.calls == [2]
+        assert all(p["gemini_analysis"]["analyzed"] for p in result)
+
+    def test_fetched_description_rescores_and_resorts(self):
+        """A description fetched in step 6 changes the score and the order (#2)"""
+        analyzer = AndroidAnalyzer(enrich_with_kimovil=False)
+        androids = [
+            {"title": "Samsung S22 8/128", "price": 200000, "link": "b"},
+            {"title": "Samsung S23 Ultra 12/256", "price": 200000, "link": "a"},
+        ]
+
+        def fake_fetch(phones, top_count):
+            for phone in phones[:top_count]:
+                if phone["link"] == "a":
+                    phone["description"] = "на запчасти, не включается"
+            return phones
+
+        with (
+            patch.object(analyzer, "_load_androids_from_session", return_value=androids),
+            patch.object(analyzer, "_fetch_top_phone_details", side_effect=fake_fetch),
+        ):
+            result = analyzer.analyze_all_androids()
+
+        assert [p["link"] for p in result] == ["b", "a"]
+        assert "🔧 For parts" in result[1]["value_factors"]

@@ -870,11 +870,15 @@ class AndroidAnalyzer:
             logger.warning("⚠️  No AI providers enabled!")
             return androids
 
-        # Phase 1: Cloud LLM analysis (PRIMARY - fast and free!)
-        androids, cloud_failures = self._run_cloud_llm_primary(androids, analysis_count)
+        if self.cloud_llm and self.cloud_llm.enabled:
+            # Phase 1: Cloud LLM analysis (PRIMARY - fast and free!)
+            androids, cloud_failures = self._run_cloud_llm_primary(androids, analysis_count)
 
-        # Phase 2: Gemini fallback (only for Cloud LLM failures)
-        androids = self._run_gemini_fallback(androids, cloud_failures)
+            # Phase 2: Gemini fallback (only for Cloud LLM failures)
+            androids = self._run_gemini_fallback(androids, cloud_failures)
+        else:
+            # Gemini is the only provider: it runs as primary
+            androids, _ = self._run_gemini_analysis(androids, analysis_count)
 
         # Re-sort after AI adjustments
         logger.info("🔄 Re-sorting by adjusted scores...")
@@ -959,6 +963,11 @@ class AndroidAnalyzer:
         # Step 4: Fetch full details for top phones
         top_count = min(len(androids), config.TOP_RECOMMENDATIONS_COUNT)
         androids = self._fetch_top_phone_details(androids, top_count)
+
+        # Fetched descriptions feed condition, battery and warranty rules: re-score and re-sort
+        for phone in androids[:top_count]:
+            self.calculate_value_score(phone)
+        androids.sort(key=lambda x: x.get("value_score", 0), reverse=True)
 
         # Step 5: AI analysis (optional 2-tier system)
         if (self.gemini and self.gemini.enabled) or (self.cloud_llm and self.cloud_llm.enabled):

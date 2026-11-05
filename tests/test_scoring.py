@@ -492,6 +492,13 @@ class TestCameraScoring:
         assert score == 0
         assert label is None
 
+    def test_no_model_does_not_match_the_first_table_entry(self):
+        """No extracted model ("" / None) gets the tier default, not Huawei P60 Pro's 30"""
+        assert get_camera_score(None) == (0, None)
+        assert get_camera_score("") == (0, None)
+        score, _label = get_camera_score(None, tier="mid")
+        assert score == 6
+
 
 class TestDXOMarkScore:
     """Test DXOMark score retrieval (returns int, not tuple)"""
@@ -515,6 +522,11 @@ class TestDXOMarkScore:
         """Unknown model = None"""
         score = get_dxomark_score("unknown phone")
         assert score is None
+
+    def test_no_model_returns_none(self):
+        """No extracted model = None, not the first table entry's 156"""
+        assert get_dxomark_score(None) is None
+        assert get_dxomark_score("") is None
 
 
 class TestProcessorScoring:
