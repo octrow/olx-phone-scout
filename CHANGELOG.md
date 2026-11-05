@@ -12,6 +12,11 @@ All notable changes to this project are documented here. The format follows
   session; a failed send never fails the run. README explains scheduling with a systemd timer or cron.
 - Dependency: `tg-toolkit` (Bot API push; pulls in `telethon`).
 
+## [1.0.6] - 2026-11-05
+
+### Changed
+- README refreshed: shorter, in plain language.
+
 ## [1.0.5] - 2026-11-05
 
 ### Fixed
