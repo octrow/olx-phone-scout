@@ -48,3 +48,4 @@
 - Сводка по всем репо: `~/dev/docs/system-design-report-2026-11-05.md`
 - [openspec/changes/](openspec/changes/): незаархивированные изменения
 - [docs/daily-runs.md](docs/daily-runs.md): ежедневные запуски
+- [docs/skills-roadmap-2026-11-05.md](docs/skills-roadmap-2026-11-05.md): навыки с рынка вакансий, 2 пункта: история цен в SQLite с медианой на SQL; ML-регрессия цены поверх неё
