@@ -329,13 +329,14 @@ async def run_pipeline(args):
         # STEP 1: Scrape
         if scrape:
             iphones, androids, unknown = await run_scraper(args)
-            results["scrape"] = len(androids) > 0
+            # --phone-type empties the other list, so judge success on all of them
+            results["scrape"] = bool(iphones or androids or unknown)
         else:
             logger.info("⏭️  Skipping scraping (using existing data)")
 
         # STEP 2: Re-categorize
         if recategorize:
-            iphones, androids, unknown = run_recategorization()  # noqa: RUF059
+            iphones, androids, unknown = run_recategorization()
             results["recategorize"] = len(androids) > 0
 
         # STEP 3: Analyze

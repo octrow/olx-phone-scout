@@ -88,7 +88,7 @@ Branches:
 Fails: a failed page is logged and skipped, the rest is kept. A failure in a count request (`_price_slices`) is not caught there and ends the step with `([], [], [])`. Zero listings → step returns empty, pipeline goes on.
 Then `merge_with_existing`: loads `all_listings.json` of the session, adds only links not yet present. Old entries are never refreshed or removed (#3).
 Then `save_results`: writes `all_listings.json`, `iphones.json`, `androids.json`, `unknown.json`. `PHONE_TYPE_FILTER` empties the other list in the result tuple and in its file (android → `iphones.json` written empty; step 2 refills it). Also writes `session_info.json`.
-The step's success flag is `len(androids) > 0` of the filtered result: `--phone-type iphone` always reports FAILED (#6).
+The step's success flag is true when any of the three lists is non-empty, so `--phone-type iphone` no longer reports FAILED (#6, fixed 2026-11-05).
 Module: `core/async_scraper`, `core/browser_transport`, `core/config`
 
 ### 2. Recategorize
@@ -204,7 +204,6 @@ Module: `infrastructure/logging`
 - Merge keeps old prices and sold listings forever (#3).
 - Removed or forbidden listings stay in the ranking and alerts (#4).
 - `[aа]\s*(\d+)` runs before every non-Samsung pattern: "Oppo A52" gets the Samsung A52 price, "camera 50mp" becomes "samsung a50" (#5).
-- `--phone-type iphone` makes the scrape stage report FAILED and exit code 1 (#6).
 - `--days-back`, `MIN_VALUE_SCORE`, `REQUIRE_MARKET_DATA`, `MIN_BRAND_CONFIDENCE`, `LOG_*` config do nothing (#7).
 - AI verdict cache keyed on title + price: equal listings share a verdict, new descriptions are not re-read (#9).
 - Condition, chip, display, warranty read the exchange-wish part of the title (#14).
