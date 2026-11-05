@@ -6,7 +6,7 @@
 
 Находки logic-map ([план](docs/plans/2026-11-05-logic-map-fixes.md), номера `#N` оттуда). Исправлены: #1, #2, #6, #12, #13.
 
-- [x] ✅ 2026-11-05 HIGH (не закоммичено; `src/infrastructure/atomic.py` `write_json_atomic`: temp-файл + replace, применён в scraper, analyzer, cache; тест `tests/test_atomic_write.py`): файлы состояния пишутся поверх (kill или полный диск обрезает `all_listings.json`, кэш; merge читает битый файл). Фикс: temp-файл + `os.replace` (`src/core/async_scraper.py:490`, `src/analysis/analyzer.py:1010,1026`, `src/infrastructure/cache.py:58`) — [system-design.md, Risks](docs/system-design.md)
+- [x] ✅ 2026-11-05 HIGH (d503076; `src/infrastructure/atomic.py` `write_json_atomic`: temp-файл + replace, применён в scraper, analyzer, cache, а также в шаге 2 `main.py run_recategorization` (2026-11-05, после 6fca5e7); тест `tests/test_atomic_write.py`): файлы состояния пишутся поверх (kill или полный диск обрезает `all_listings.json`, кэш; merge читает битый файл). Фикс: temp-файл + `os.replace` (`src/core/async_scraper.py:490`, `src/analysis/analyzer.py:1010,1026`, `src/infrastructure/cache.py:58`) — [system-design.md, Risks](docs/system-design.md)
 - [ ] MEDIUM #3: `merge_with_existing` не обновляет цену/название известных ссылок, снятые не удаляются (`src/core/async_scraper.py:410`)
 - [ ] MEDIUM #4: `is_unavailable` (404/410/403) никто не читает, снятые объявления остаются в рейтинге и алерте (`src/fetchers/listing_fetcher.py:~305`)
 - [ ] MEDIUM #5: `extract_model_from_title` с `[aа]\s*(\d+)` без `\b` и проверки бренда: "Oppo A52" → "samsung a52" (`src/analysis/analyzer.py:224`)

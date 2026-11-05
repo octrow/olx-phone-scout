@@ -35,3 +35,21 @@ def test_cache_save_is_atomic(tmp_path: Path, monkeypatch):
     cache.cache["bad"] = object()
     cache.save()  # error is logged, not raised
     assert json.loads(cache_file.read_text(encoding="utf-8")) == {"k": "v"}
+
+
+def test_recategorize_failure_keeps_all_listings(tmp_path: Path, monkeypatch):
+    """Step 2 rewrites all_listings.json; a failed dump must not truncate it."""
+    import main
+
+    files = {
+        name: tmp_path / f"{name}.json"
+        for name in ("all_listings", "iphones", "androids", "unknown")
+    }
+    original = {"total": 1, "scraped_at": "t", "listings": [{"title": "Redmi 9", "link": "a"}]}
+    files["all_listings"].write_text(json.dumps(original), encoding="utf-8")
+    monkeypatch.setattr(main.config, "get_output_files", lambda: files)
+    monkeypatch.setattr(main, "detect_phone_brand_improved", lambda _t: (object(), "android"))
+
+    main.run_recategorization()  # the error is logged, not raised
+
+    assert json.loads(files["all_listings"].read_text(encoding="utf-8")) == original

@@ -31,6 +31,7 @@ from src.core.async_scraper import AsyncOLXScraper
 from src.detection.recategorize import detect_phone_brand_improved
 from src.infrastructure import logging as logging_cfg
 from src.infrastructure.alerts import notify_new_top
+from src.infrastructure.atomic import write_json_atomic
 from src.infrastructure.logging import logger
 from src.infrastructure.setup_env import setup_env
 
@@ -160,26 +161,17 @@ def run_recategorization():
         # Save updated data
         output_files = config.get_output_files()
 
-        with output_files["all_listings"].open("w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "total": len(all_listings),
-                    "scraped_at": data.get("scraped_at", datetime.now().isoformat()),
-                    "listings": all_listings,
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-
-        with output_files["iphones"].open("w", encoding="utf-8") as f:
-            json.dump({"count": len(iphones), "phones": iphones}, f, ensure_ascii=False, indent=2)
-
-        with output_files["androids"].open("w", encoding="utf-8") as f:
-            json.dump({"count": len(androids), "phones": androids}, f, ensure_ascii=False, indent=2)
-
-        with output_files["unknown"].open("w", encoding="utf-8") as f:
-            json.dump({"count": len(unknown), "phones": unknown}, f, ensure_ascii=False, indent=2)
+        write_json_atomic(
+            output_files["all_listings"],
+            {
+                "total": len(all_listings),
+                "scraped_at": data.get("scraped_at", datetime.now().isoformat()),
+                "listings": all_listings,
+            },
+        )
+        write_json_atomic(output_files["iphones"], {"count": len(iphones), "phones": iphones})
+        write_json_atomic(output_files["androids"], {"count": len(androids), "phones": androids})
+        write_json_atomic(output_files["unknown"], {"count": len(unknown), "phones": unknown})
 
         logger.info("")
         logger.info("RE-CATEGORIZATION COMPLETE:")

@@ -84,7 +84,7 @@ Failure table:
 - Kimovil 429 / Cloudflare: that model gets None, scoring falls back to title-only; no breaker, so a blocked IP still gets every model attempted each run (bounded: 2 concurrent, 2.5 s).
 - Cloud LLM down: Gemini fallback if enabled, else phone keeps its score. 8 s upstream = latency only; no circuit breaker, but call count <=50.
 - Machine gone: state lives in `data/`; no backup. Losing it loses `alerts_sent.json` (duplicate alerts once) and caches (re-scrape cost). Acceptable.
-- Crash mid-write: `json.dump` straight into the target file (`async_scraper.py:490`, `analyzer.py:1010,1026`, `cache.py:58`). A kill during dump truncates the file; next run merges from a corrupt file.
+- Crash mid-write: state files (`all_listings.json`, the category files, `androids_analyzed.json`, the top file, caches) go through `write_json_atomic` (temp file + `os.replace`) in the scraper, the analyzer, the cache and step 2 in `main.py`, so a kill leaves the previous file. Still direct `json.dump`: the standalone `detection/recategorize.main`, `session_info.json` (`config.py`) and the Gemini checkpoint (`ai/gemini.py`).
 - Retries: page level 2 retries with backoff via PoliteClient; details fetch none; rate limits are self-imposed delays.
 
 ## 7. Trade-offs
@@ -103,7 +103,7 @@ Next rung: SQLite (rung 1 storage) instead of JSON when any session file passes 
 
 ## Risks
 
-- HIGH, FIXED 2026-11-05 (uncommitted; `write_json_atomic` in `src/infrastructure/atomic.py`), was: `src/core/async_scraper.py:490,510-519`, `src/analysis/analyzer.py:1010,1026`, `src/infrastructure/cache.py:58`: non-atomic overwrites of state files (`all_listings.json`, `androids_analyzed.json`, caches). A kill or full disk (root partition is tight on this machine) truncates data; merge then reads garbage. Fix: write temp file + `os.replace`.
+- HIGH, FIXED 2026-11-05 (d503076, plus step 2 in `main.py run_recategorization`; `write_json_atomic` in `src/infrastructure/atomic.py`), was: `src/core/async_scraper.py:490,510-519`, `src/analysis/analyzer.py:1010,1026`, `src/infrastructure/cache.py:58`: non-atomic overwrites of state files (`all_listings.json`, `androids_analyzed.json`, caches). A kill or full disk (root partition is tight on this machine) truncates data; merge then reads garbage. Fix: write temp file + `os.replace`.
 - MEDIUM, `src/fetchers/listing_fetcher.py:82,264`: top-50 detail fetch is gathered without pacing or retry (logic-map step 6), the only unpaced burst against OLX; the most likely trigger of an IP block that also stops scraping.
 - MEDIUM, `src/core/async_scraper.py:235-252`: slice count request failure is uncaught and returns `([], [], [])`, silently turning a transient error into an "empty" run; exit code depends on `len(androids) > 0` (logic-map #6).
 - MEDIUM, `data/sessions/*`: no concurrency guard. A cron run overlapping a manual run on the same session interleaves rewrites of the same JSON files. Add a lockfile per session.
