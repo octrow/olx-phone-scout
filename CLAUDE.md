@@ -378,6 +378,11 @@ jq '.phones[].title' data/sessions/*/results/unknown.json
 - **CONTRIBUTING.md** - Dev setup, PR rules
 - **CHANGELOG.md** - Release notes
 - **CLAUDE.md** - This file (AI entry point)
+- **docs/logic-map.md** - How a search becomes a ranked list: every step, branch and module. Known gaps: `docs/plans/2026-11-05-logic-map-fixes.md`
+
+**Rules:**
+- Change a pipeline step or a branch -> update `docs/logic-map.md` in the same commit.
+- `tests/test_logic_map.py` fails when a `Module:` line in the map points to a module that is gone.
 
 ---
 
