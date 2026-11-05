@@ -379,6 +379,7 @@ jq '.phones[].title' data/sessions/*/results/unknown.json
 - **CHANGELOG.md** - Release notes
 - **CLAUDE.md** - This file (AI entry point)
 - **docs/logic-map.md** - How a search becomes a ranked list: every step, branch and module. Known gaps: `docs/plans/2026-11-05-logic-map-fixes.md`
+- Open bugs, plans and ideas: [PLAN.md](PLAN.md).
 
 **Rules:**
 - Change a pipeline step or a branch -> update `docs/logic-map.md` in the same commit.

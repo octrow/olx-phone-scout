@@ -50,6 +50,7 @@ from src.core.constants import MAX_DESCRIPTION_DISPLAY_LENGTH, MAX_FAILED_PHONES
 from src.detection.patterns import strip_exchange_wish
 from src.enrichment.spec_enrichment import SpecEnricher
 from src.fetchers.listing_fetcher import ListingDetailFetcher
+from src.infrastructure.atomic import write_json_atomic
 from src.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
@@ -1007,29 +1008,20 @@ class AndroidAnalyzer:
 
     def _save_full_analysis(self, androids: list[dict[str, Any]], output_path: str) -> None:
         """Save complete analysis results to JSON file"""
-        with Path(output_path).open("w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "total": len(androids),
-                    "analyzed_at": datetime.now().isoformat(),
-                    "configuration": config.get_config_summary(),
-                    "phones": androids,
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
+        write_json_atomic(
+            output_path,
+            {
+                "total": len(androids),
+                "analyzed_at": datetime.now().isoformat(),
+                "configuration": config.get_config_summary(),
+                "phones": androids,
+            },
+        )
         logger.info(f"✅ Saved full analysis: {config.display_path(output_path)}")
 
     def _save_top_phones(self, top_phones: list[dict[str, Any]], output_path: str) -> None:
         """Save top N phones to JSON file"""
-        with Path(output_path).open("w", encoding="utf-8") as f:
-            json.dump(
-                {"count": len(top_phones), "phones": top_phones},
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
+        write_json_atomic(output_path, {"count": len(top_phones), "phones": top_phones})
         logger.info(
             f"✅ Saved top {config.TOP_RECOMMENDATIONS_COUNT}: {config.display_path(output_path)}"
         )

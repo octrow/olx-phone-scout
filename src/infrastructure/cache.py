@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from src.infrastructure.atomic import write_json_atomic
+
 
 class CustomCache:  # TODO: consider using at least cachetools/diskcache/etc
     """
@@ -55,8 +57,7 @@ class CustomCache:  # TODO: consider using at least cachetools/diskcache/etc
             # Ensure parent directory exists
             self.cache_file.parent.mkdir(parents=True, exist_ok=True)
 
-            with Path.open(self.cache_file, "w", encoding="utf-8") as f:
-                json.dump(self.cache, f, ensure_ascii=False, indent=2)
+            write_json_atomic(self.cache_file, self.cache)
             self.logger.debug(
                 f"💾 Cache saved ({len(self.cache)} entries) to {self.cache_file.name}"
             )

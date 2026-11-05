@@ -30,6 +30,7 @@ from tqdm.asyncio import tqdm_asyncio
 from src.core import config
 from src.core.browser_transport import BrowserTransport
 from src.detection.patterns import BRAND_PATTERNS, detect_phone_brand
+from src.infrastructure.atomic import write_json_atomic
 from src.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
@@ -486,37 +487,27 @@ class AsyncOLXScraper:
 
     def _save_all_listings(self, all_listings: list, output_file: str) -> None:
         """Save complete listings file"""
-        output_path = Path(output_file)
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "total": len(all_listings),
-                    "scraped_at": datetime.now().isoformat(),
-                    "configuration": config.get_config_summary(),
-                    "scraper_mode": "async_concurrent",
-                    "listings": all_listings,
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
+        write_json_atomic(
+            output_file,
+            {
+                "total": len(all_listings),
+                "scraped_at": datetime.now().isoformat(),
+                "configuration": config.get_config_summary(),
+                "scraper_mode": "async_concurrent",
+                "listings": all_listings,
+            },
+        )
         logger.info(f"✅ Saved all listings to: {config.display_path(output_file)}")
 
     def _save_categories(
         self, iphones: list, androids: list, unknown: list, output_files: dict, results_dir: str
     ) -> None:
         """Save categorized phone lists"""
-        iphones_path = Path(output_files["iphones"])
-        with iphones_path.open("w", encoding="utf-8") as f:
-            json.dump({"count": len(iphones), "phones": iphones}, f, ensure_ascii=False, indent=2)
+        write_json_atomic(output_files["iphones"], {"count": len(iphones), "phones": iphones})
 
-        androids_path = Path(output_files["androids"])
-        with androids_path.open("w", encoding="utf-8") as f:
-            json.dump({"count": len(androids), "phones": androids}, f, ensure_ascii=False, indent=2)
+        write_json_atomic(output_files["androids"], {"count": len(androids), "phones": androids})
 
-        unknown_path = Path(output_files["unknown"])
-        with unknown_path.open("w", encoding="utf-8") as f:
-            json.dump({"count": len(unknown), "phones": unknown}, f, ensure_ascii=False, indent=2)
+        write_json_atomic(output_files["unknown"], {"count": len(unknown), "phones": unknown})
 
         logger.info(f"✅ Saved categories to: {config.display_path(results_dir)}")
 
