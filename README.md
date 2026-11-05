@@ -11,9 +11,13 @@
   <b>English</b> · <a href="README.ru.md">Русский</a>
 </p>
 
-A command-line tool for anyone buying a used phone on OLX.kz. It reads every listing in your price
-range, works out the brand and model from messy titles, adds specs from Kimovil, compares the asking
-price with the model's market price and writes a ranked report. Built for Almaty, works for any OLX.kz region.
+Finds good used phones on OLX.kz and ranks them by value.
+
+It reads every listing in your price range and works out brand and model from messy titles.
+It adds Kimovil specs and compares the asking price with the model's market price.
+The result is a ranked report. Built for Almaty, works for any OLX.kz region.
+
+Quick start: run `uv sync`, then `./run.sh --min-price 150000 --max-price 300000` ([Install](#install)).
 
 <p align="center">
   <img src="assets/readme/demo.gif" width="100%" alt="A real run of ./run.sh --min-price 150000 --max-price 160000: 396 listings scraped in about 3 seconds, 117 Android phones scored, top 5 printed with their discounts from market price (played at 2.5x speed)">
@@ -40,26 +44,25 @@ The top of the report from `./run.sh --min-price 15000 --max-price 80000 --phone
 
 ## What it does
 
-- **Reads the whole price range.** OLX returns at most 1000 results per search, so the range is split
-  into price slices until each one fits under that cap. All pages are fetched concurrently, paced and
-  retried.
-- **Understands messy titles.** 22 brands, Cyrillic spellings and common typos ("xioami", "techno",
-  "poko", "z фолд"). Phones offered *in exchange* ("обмен на iphone 13") don't count as the phone for sale.
-- **Adds specs from Kimovil.** Screen, chipset, AnTuTu, battery, charging and DxOMark, cached in SQLite
-  across runs.
-- **Scores value.** Discount from the market price (102 models), release year, tier, storage, RAM,
-  camera and condition. Implausible discounts are capped, out-of-town listings and shops are flagged.
-- **Optional AI pass.** Gemini, Cerebras or OpenRouter read the description (and optionally the photos)
-  for defects and extras. No API key needed for the rest of the pipeline.
+- Reads the whole price range. OLX returns at most 1000 results per search, so the range is split
+  into price slices that each fit under the cap. Pages load concurrently, paced and retried.
+- Reads messy titles. 22 brands, Cyrillic spellings and typos ("xioami", "techno", "poko",
+  "z фолд"). A phone offered *in exchange* ("обмен на iphone 13") is not the phone for sale.
+- Adds specs from Kimovil: screen, chipset, AnTuTu, battery, charging, DxOMark. Cached in SQLite.
+- Scores value: discount from the market price (102 models), release year, tier, storage, RAM,
+  camera and condition. Implausible discounts are capped. Out-of-town listings and shops are flagged.
+- Optional AI pass. Gemini, Cerebras or OpenRouter read the description (and optionally the photos)
+  for defects and extras. The rest of the pipeline needs no API key.
 
 ## How it differs
 
-- **OLX's own search** filters by price and sorts by date or price. It doesn't know what a model is
-  worth, so a cheap old phone and a well-priced recent flagship look alike, and "xioami 14 512/16" is
-  just a title.
-- **Price comparison sites** cover new phones in shops, not private used listings.
-- **Generic scrapers** give you raw listings. Brand detection, specs, scoring and getting past OLX's
-  TLS fingerprint check are left to you.
+Compared with other ways to shop for a used phone on OLX.kz:
+
+- OLX search filters by price and sorts by date or price. It has no idea what a model is worth.
+  A cheap old phone and a well-priced recent flagship look alike, and "xioami 14 512/16" is only a title.
+- Price comparison sites cover new phones in shops, not private used listings.
+- Generic scrapers give you raw listings. Brand detection, specs, scoring and the TLS fingerprint
+  check on OLX are left to you.
 
 ## How it works
 
@@ -67,10 +70,10 @@ The top of the report from `./run.sh --min-price 15000 --max-price 80000 --phone
   <img src="assets/readme/pipeline.svg" width="100%" alt="Pipeline: scrape every listing in price slices, detect brand and model, then score value with Kimovil specs and market prices into the top 50 report">
 </p>
 
-OLX and Kimovil both sit behind bot protection that checks the TLS fingerprint, not just headers.
+OLX and Kimovil sit behind bot protection that checks the TLS fingerprint and the headers.
 Requests go through [curl_cffi](https://github.com/lexiforest/curl_cffi) impersonating Chrome, with
 pacing and retries from [market-sources](https://github.com/octrow/market-sources). Kimovil pages are
-parsed with selectolax; no browser is involved.
+parsed with selectolax. No browser is involved.
 
 Architecture notes for contributors and coding agents are in [CLAUDE.md](CLAUDE.md).
 
@@ -110,37 +113,10 @@ For the AI pass, copy `.env.example` to `.env` and fill in the key of the provid
 
 ## Daily runs
 
-`--notify` sends the listings that entered the top 10 since the last notification to a Telegram chat:
-title, price, score and link. Set `TELEGRAM_BOT_TOKEN` (from [@BotFather](https://t.me/BotFather))
-and `TELEGRAM_CHAT_ID` in `.env`. Sent links are remembered per session in `alerts_sent.json`, so
-each run reports only what is new. A missing token or a failed send is a warning, never a failed
-run; unsent listings are retried next time. The first run sends the whole current top 10.
+`--notify` sends listings that entered the top 10 since the last run to a Telegram chat.
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env`.
 
-There is no built-in scheduler. A systemd user timer, `~/.config/systemd/user/olx-phone-scout.service`:
-
-```ini
-[Service]
-Type=oneshot
-ExecStart=/path/to/olx-phone-scout/run.sh --notify
-```
-
-and `~/.config/systemd/user/olx-phone-scout.timer`:
-
-```ini
-[Timer]
-OnCalendar=*-*-* 09:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-```
-
-Enable it with `systemctl --user enable --now olx-phone-scout.timer` (`Persistent=true` catches up
-after sleep). Or with cron (`uv` must be on cron's `PATH`):
-
-```cron
-0 9 * * * /path/to/olx-phone-scout/run.sh --notify >/dev/null 2>&1
-```
+Scheduler setup (systemd, cron) and details: [docs/daily-runs.md](docs/daily-runs.md).
 
 ## Output
 
