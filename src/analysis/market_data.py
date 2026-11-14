@@ -229,6 +229,37 @@ MARKET_PRICES = {
         "year": 2020,
         "tier": "mid",
     },
+    # Source: https://news.samsung.com/de/zuwachs-fur-die-galaxy-a-serie-das-samsung-galaxy-a34-5g-und-galaxy-a54-5g-erweitern-die-galaxy-familie
+    "samsung a54": {
+        "initial": round(489 * EURTOKZT_RATE),
+        "launch_currency": "EUR",
+        "original_price": 489,
+        "year": 2023,
+        "tier": "mid",
+    },
+    # Source: https://news.samsung.com/de/samsung-galaxy-a55-5g-und-galaxy-a35-5g-spannende-neuheiten-und-verbesserte-sicherheit
+    "samsung a35": {
+        "initial": round(379 * EURTOKZT_RATE),
+        "launch_currency": "EUR",
+        "original_price": 379,
+        "year": 2024,
+        "tier": "mid",
+    },
+    # Source: https://news.samsung.com/at/samsung-bringt-ai-auf-die-neuen-modelle-der-a-serie
+    "samsung a36": {
+        "initial": round(379 * EURTOKZT_RATE),
+        "launch_currency": "EUR",
+        "original_price": 379,
+        "year": 2025,
+        "tier": "mid",
+    },
+    "samsung a56": {
+        "initial": round(479 * EURTOKZT_RATE),
+        "launch_currency": "EUR",
+        "original_price": 479,
+        "year": 2025,
+        "tier": "mid",
+    },
     "samsung a41": {
         "initial": round(249 * EURTOKZT_RATE),
         "launch_currency": "EUR",

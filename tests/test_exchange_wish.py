@@ -30,3 +30,16 @@ def test_iphone_x_family_and_samsung_s_are_not_confused():
     assert analyzer.extract_model_from_title("iPhone XS Max 256") == "iphone xs max"
     assert analyzer.extract_model_from_title("iPhone XS 64") == "iphone xs"  # not "samsung s64"
     assert analyzer.extract_model_from_title("iPhone X 64gb") == "iphone x"
+
+
+def test_samsung_a_series_models_get_market_prices():
+    analyzer = AndroidAnalyzer.__new__(AndroidAnalyzer)
+    analyzer.market_prices = MARKET_PRICES
+
+    for title, model in (
+        ("Samsung Galaxy A35 5G 128GB", "samsung a35"),
+        ("Samsung Galaxy A36 5G 128GB", "samsung a36"),
+        ("Samsung Galaxy A54 5G 256GB", "samsung a54"),
+        ("Samsung Galaxy A56 5G 256GB", "samsung a56"),
+    ):
+        assert analyzer.get_market_price_info(title) is MARKET_PRICES[model]
